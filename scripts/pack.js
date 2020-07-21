@@ -1,7 +1,6 @@
 // https://github.com/electron/electron-apps/blob/master/script/pack.js
 const Queue = require('promise-queue');
 const fs = require('fs-extra');
-const imageSize = require('image-size');
 const path = require('path');
 const sharp = require('sharp');
 const yaml = require('yamljs');
@@ -12,29 +11,25 @@ const appPath = path.join(__dirname, '../apps');
 const distPath = path.join(__dirname, '../dist');
 
 // Run concurrently to improve performance
-const maxConcurrent = 20;
+const maxConcurrent = 1;
 const maxQueue = Infinity;
 const queue = new Queue(maxConcurrent, maxQueue);
 
-const fixIconPyPath = path.join(__dirname, 'fixicon.py');
+const maskIconPyPath = path.join(__dirname, 'maskicon.py');
 
-const fixIconAsync = (iconPath) => new Promise((resolve, reject) => {
-  const size = imageSize(iconPath).width;
-  const pad = Math.round((size / 512) * 20); // need to find a better formula
-
-  exec(`python3 ${fixIconPyPath} ${iconPath} ${size} ${pad}`, (e, stdout, stderr) => {
+const maskIconAsync = (iconPath) => new Promise((resolve, reject) => {
+  exec(`python3 ${maskIconPyPath} ${iconPath}`, (e, stdout, stderr) => {
     if (e instanceof Error) {
       reject(e);
       return;
     }
 
     // eslint-disable-next-line no-console
-    console.log(stdout);
+    console.log(stdout.trim());
 
     resolve({ stdout, stderr });
   });
 });
-
 
 fs.readdirSync(appPath)
   .filter((filename) => fs.statSync(path.join(appPath, filename)).isDirectory())
@@ -49,7 +44,7 @@ fs.readdirSync(appPath)
       icon128: `${s3Url}/apps/${slug}/${slug}-icon-128.png`,
     };
 
-    const iconName = process.env.APP_ID === 'singlebox' ? `${slug}-icon-filled.png` : `${slug}-icon.png`;
+    const iconName = `${slug}-icon.png`;
     const iconFile = path.join(appPath, slug, iconName);
     const copiedIconFile = path.join(distPath, `${slug}/${slug}-icon.png`);
 
@@ -58,7 +53,7 @@ fs.readdirSync(appPath)
     queue.add(() => Promise.resolve()
       .then(() => {
         if (process.env.APP_ID === 'singlebox') return null;
-        return fixIconAsync(copiedIconFile);
+        return maskIconAsync(copiedIconFile);
       })
       .then(() => sharp(copiedIconFile)
         .resize(128, 128)

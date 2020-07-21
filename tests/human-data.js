@@ -51,7 +51,6 @@ describe('human-submitted app data', () => {
       const yamlFile = `${slug}.yml`;
       const yamlPath = path.join(basedir, yamlFile);
       const iconPath = path.join(basedir, `${slug}-icon.png`);
-      const iconFilledPath = path.join(basedir, `${slug}-icon-filled.png`);
 
       it('is in a directory whose name is lowercase with dashes as a delimiter', () => {
         expect(slugg(slug)).to.equal(slug);
@@ -83,8 +82,8 @@ describe('human-submitted app data', () => {
       });
 
       describe('icon', () => {
-        it(`exists as ${slug}-icon.png`, () => {
-          expect(fs.existsSync(iconPath)).to.equal(true, `${slug}-icon.png not found`);
+        it(`exists as ${slug}-icon-filled.png`, () => {
+          expect(fs.existsSync(iconPath)).to.equal(true, `${slug}-icon-filled.png not found`);
         });
 
         it('is a square', function () {
@@ -107,35 +106,6 @@ describe('human-submitted app data', () => {
           if (!fs.existsSync(iconPath)) return this.skip();
 
           const dimensions = imageSize(iconPath);
-          return expect(dimensions.width).to.be.below(1025);
-        });
-      });
-
-      describe('icon-filled', () => {
-        it(`exists as ${slug}-icon-filled.png`, () => {
-          expect(fs.existsSync(iconFilledPath)).to.equal(true, `${slug}-icon-filled.png not found`);
-        });
-
-        it('is a square', function () {
-          if (!fs.existsSync(iconFilledPath)) this.skip();
-          else {
-            const dimensions = imageSize(iconFilledPath);
-            expect(dimensions.width).to.be.a('number');
-            expect(dimensions.width).to.equal(dimensions.height);
-          }
-        });
-
-        it('is at least 128px x 128px', function () {
-          if (!fs.existsSync(iconFilledPath)) return this.skip();
-
-          const dimensions = imageSize(iconFilledPath);
-          return expect(dimensions.width).to.be.above(127);
-        });
-
-        it('is not more than 1024px x 1024px', function () {
-          if (!fs.existsSync(iconFilledPath)) return this.skip();
-
-          const dimensions = imageSize(iconFilledPath);
           return expect(dimensions.width).to.be.below(1025);
         });
       });
